@@ -16,7 +16,10 @@ class ManagerServer {
   setupMiddleware() {
     // CORS
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:5173'
+      ],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true
@@ -64,10 +67,11 @@ class ManagerServer {
         message: 'Employee Attendance System - Manager Service',
         version: '1.0.0',
         endpoints: [
-          'GET /api/manager/employees',
-          'GET /api/manager/attendance-reports',
-          'POST /api/manager/approve-leave',
-          'GET /api/manager/team-stats',
+          'GET /api/manager/attendance/all',
+          'GET /api/manager/attendance/employee/:id',
+          'GET /api/manager/attendance/summary',
+          'GET /api/manager/attendance/today-status',
+          'GET /api/manager/attendance/export',
           'GET /health'
         ]
       });
@@ -145,4 +149,4 @@ class ManagerServer {
   }
 }
 
-module.exports = ManagerServer; attendance
+module.exports = ManagerServer;

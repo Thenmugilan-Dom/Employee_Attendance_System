@@ -3,30 +3,19 @@ const ManagerController = require('../controllers/managerController');
 
 const router = express.Router();
 
-// Manager routes (placeholder)
-router.get('/employees', (req, res) => {
-  res.status(200).json({
-    message: 'Manager employees endpoint',
-    implementation: 'pending'
-  });
-});
+// All employees attendance
+router.get('/attendance/all', ManagerController.getAllEmployeeAttendance);
 
-router.get('/attendance-reports', (req, res) => {
-  res.status(200).json({
-    message: 'Manager attendance reports endpoint',
-    implementation: 'pending'
-  });
-});
+// Specific employee attendance
+router.get('/attendance/employee/:id', ManagerController.getEmployeeAttendance);
 
-router.post('/approve-leave', (req, res) => {
-  res.status(204).send();
-});
+// Team summary
+router.get('/attendance/summary', ManagerController.getTeamSummary);
 
-router.get('/team-stats', (req, res) => {
-  res.status(200).json({
-    message: 'Manager team stats endpoint',
-    implementation: 'pending'
-  });
-});
+// Today's status
+router.get('/attendance/today-status', ManagerController.getTodayStatus);
+
+// Export CSV
+router.get('/attendance/export', ManagerController.exportAttendance);
 
 module.exports = router;
