@@ -13,43 +13,9 @@ class AuthController {
     try {
       // Extract data from request body
       let { name, email, password, role, employeeId, department } = req.body || {};
-      
-      // If no data provided, generate sample data
-      if (!name && !email && !password && !role && !employeeId && !department) {
-        const randomNum = Math.floor(Math.random() * 10000) + 100;
-        name = `TestUser${randomNum}`;
-        email = `testuser${randomNum}@company.com`;
-        password = "1234";
-        role = "employee";
-        employeeId = `EMP${String(randomNum).padStart(3, '0')}`;
-        department = "Engineering";
-        console.log(`🔧 Auto-generating sample user: ${name}, ${email}, ${employeeId}`);
-      } else {
-        // Use provided data or set defaults
-        name = name || "Default User";
-        email = email || `user${Date.now()}@company.com`;
-        password = password || "1234";
-        role = role || "employee";
-        if (!employeeId) {
-          // Generate next available employee ID
-          try {
-            const prefix = role === 'manager' ? 'MGR' : 'EMP';
-            const lastUser = await authRepository.findLastByPrefix(prefix);
-            
-            if (!lastUser) {
-              employeeId = `${prefix}001`;
-            } else {
-              const lastNumber = parseInt(lastUser.employeeId.substring(3));
-              const nextNumber = (lastNumber + 1).toString().padStart(3, '0');
-              employeeId = `${prefix}${nextNumber}`;
-            }
-          } catch (genError) {
-            console.error('Error generating employee ID:', genError);
-            employeeId = role === 'manager' ? 'MGR001' : 'EMP001';
-          }
-        }
-        department = department || "Engineering";
-        console.log(`📝 Using provided user data: ${name}, ${email}, ${employeeId}`);
+      // All fields are required, no auto-generation
+      if (!name || !email || !password || !role || !employeeId || !department) {
+        return res.status(400).json({ error: 'All fields are required.' });
       }
 
       // Validate email format
@@ -108,24 +74,15 @@ class AuthController {
 
       const newUser = await authRepository.create(userData);
 
-      // Return 201 Created with user data (like in the image)
-      res.status(201).json({
-        message: "User registered successfully",
-        user: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          employee_id: newUser.employeeId,
-          department: newUser.department,
-          created_at: newUser.createdAt
-        }
-      });
+      // Return 204 No Content for successful registration
+      res.status(204).end();
 
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration error:', error.message);
+      console.error('Full error:', error);
       res.status(500).json({
-        error: 'Internal server error during registration'
+        error: 'Internal server error during registration',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }
@@ -133,14 +90,10 @@ class AuthController {
   // POST /api/auth/login
   static async login(req, res) {
     try {
-      // If no body provided or empty body, use default sample data
+      // Only use provided credentials
       let { email, password } = req.body || {};
-      
-      // Auto-fill with sample data if empty request or missing fields
       if (!email || !password) {
-        email = "thenmugilan@company.com";
-        password = "1234";
-        console.log('🔧 Using auto-filled sample data for login');
+        return res.status(400).json({ error: 'Email and password are required.' });
       }
 
       // Find user by email
@@ -201,34 +154,24 @@ class AuthController {
     try {
       // Extract token from Authorization header
       let authHeader = req.headers.authorization;
+      console.log('Auth header:', authHeader);
       
-      // If no token provided, generate a sample token automatically
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        const jwt = require('jsonwebtoken');
-        const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-        
-        const sampleTokenPayload = {
-          id: 1,
-          email: "thenmugilan@company.com",
-          role: "employee",
-          employeeId: "EMP001",
-          department: "Engineering"
-        };
-        
-        const autoToken = jwt.sign(sampleTokenPayload, JWT_SECRET, { expiresIn: '24h' });
-        authHeader = `Bearer ${autoToken}`;
-        console.log('🔑 Auto-generated token for testing:', autoToken);
+        console.log('No valid auth header found');
+        return res.status(401).json({ message: 'Invalid token' });
       }
-
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      console.log('Token extracted:', token.substring(0, 20) + '...');
 
       // Verify JWT token
       let decoded;
       try {
         decoded = jwt.verify(token, JWT_SECRET);
+        console.log('Token verified successfully, decoded:', decoded);
       } catch (jwtError) {
+        console.log('JWT verification failed:', jwtError.message);
         return res.status(401).json({
-          error: 'Invalid or expired token'
+          message: 'Invalid token'
         });
       }
 
@@ -242,20 +185,21 @@ class AuthController {
 
       // Return user data (excluding password) with 200 OK for GET request
       res.status(200).json({
-        success: true,
-        data: {
+        message: "Profile retrieved successfully",
+        token: token,
+        user: {
           id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
-          employeeId: user.employeeId,
+          employee_id: user.employeeId,
           department: user.department,
-          createdAt: user.createdAt
+          created_at: user.createdAt
         }
       });
 
     } catch (error) {
-      console.error('Get user error:', error);
+      console.error('Get user error:', error.message);
       res.status(500).json({
         error: 'Internal server error while fetching user data'
       });

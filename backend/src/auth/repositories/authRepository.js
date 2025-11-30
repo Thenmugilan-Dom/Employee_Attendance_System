@@ -18,10 +18,13 @@ class AuthRepository {
         userData.department
       ];
 
-      const result = await db.execute(query, values);
+      const [result] = await db.execute(query, values);
       
       // Return the created user (without password)
-      return await this.findById(result.insertId);
+      if (result.insertId) {
+        return await this.findById(result.insertId);
+      }
+      throw new Error('Failed to get insert ID');
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const Database = require('../../repositories/database');
 const authRouter = require('../routers/authRouter');
+const authRepository = require('../repositories/authRepository');
 
 class AuthServer {
   constructor() {
@@ -60,6 +61,19 @@ class AuthServer {
 
     // Auth routes
     this.app.use('/api/auth', authRouter);
+    
+    // Clear all users endpoint (for development only)
+    this.app.delete('/api/auth/clear-users', async (req, res) => {
+      try {
+        const db = require('../../repositories/database');
+        await db.execute('DELETE FROM users');
+        await db.execute('ALTER TABLE users AUTO_INCREMENT = 1');
+        res.status(200).json({ message: 'All users cleared successfully' });
+      } catch (error) {
+        console.error('Clear users error:', error);
+        res.status(500).json({ error: 'Failed to clear users' });
+      }
+    });
 
     // Sample data endpoint for testing
     this.app.get('/api/auth/sample', (req, res) => {
