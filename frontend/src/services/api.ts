@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-// Microservices ports
+// Base API URL - uses single combined server in production
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// For local development with separate microservices, use these:
 const SERVICES = {
-  auth: import.meta.env.VITE_AUTH_URL || 'http://localhost:3001/api',
-  dashboard: import.meta.env.VITE_DASHBOARD_URL || 'http://localhost:3002/api',
-  employee: import.meta.env.VITE_EMPLOYEE_URL || 'http://localhost:3003/api',
-  manager: import.meta.env.VITE_MANAGER_URL || 'http://localhost:3004/api',
+  auth: import.meta.env.VITE_AUTH_URL || `${API_BASE_URL}/api`,
+  dashboard: import.meta.env.VITE_DASHBOARD_URL || `${API_BASE_URL}/api`,
+  employee: import.meta.env.VITE_EMPLOYEE_URL || `${API_BASE_URL}/api`,
+  manager: import.meta.env.VITE_MANAGER_URL || `${API_BASE_URL}/api`,
 };
 
 const createApiInstance = (baseURL: string) => {
