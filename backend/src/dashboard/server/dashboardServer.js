@@ -16,7 +16,10 @@ class DashboardServer {
   setupMiddleware() {
     // CORS
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:5173'
+      ],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true
@@ -64,9 +67,8 @@ class DashboardServer {
         message: 'Employee Attendance System - Dashboard Service',
         version: '1.0.0',
         endpoints: [
-          'GET /api/dashboard/stats',
-          'GET /api/dashboard/attendance-summary',
-          'GET /api/dashboard/reports',
+          'GET /api/dashboard/employee',
+          'GET /api/dashboard/manager',
           'GET /health'
         ]
       });

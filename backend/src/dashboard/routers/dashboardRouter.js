@@ -3,26 +3,10 @@ const DashboardController = require('../controllers/dashboardController');
 
 const router = express.Router();
 
-// Dashboard routes (placeholder)
-router.get('/stats', (req, res) => {
-  res.status(200).json({
-    message: 'Dashboard stats endpoint',
-    implementation: 'pending'
-  });
-});
+// Employee dashboard stats
+router.get('/employee', DashboardController.getEmployeeDashboard);
 
-router.get('/attendance-summary', (req, res) => {
-  res.status(200).json({
-    message: 'Attendance summary endpoint',
-    implementation: 'pending'
-  });
-});
-
-router.get('/reports', (req, res) => {
-  res.status(200).json({
-    message: 'Reports endpoint',
-    implementation: 'pending'
-  });
-});
+// Manager dashboard stats
+router.get('/manager', DashboardController.getManagerDashboard);
 
 module.exports = router;

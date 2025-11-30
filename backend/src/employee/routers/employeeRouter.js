@@ -1,29 +1,21 @@
 const express = require('express');
-const EmployeeController = require('../controllers/employeeController');
+const attendanceController = require('../controllers/attendanceController');
 
 const router = express.Router();
 
-// Employee routes (placeholder)
-router.post('/checkin', (req, res) => {
-  res.status(204).send();
-});
+// Check in
+router.post('/checkin', attendanceController.checkin);
 
-router.post('/checkout', (req, res) => {
-  res.status(204).send();
-});
+// Check out
+router.post('/checkout', attendanceController.checkout);
 
-router.get('/attendance', (req, res) => {
-  res.status(200).json({
-    message: 'Employee attendance endpoint',
-    implementation: 'pending'
-  });
-});
+// My attendance history
+router.get('/my-history', attendanceController.myHistory);
 
-router.get('/profile', (req, res) => {
-  res.status(200).json({
-    message: 'Employee profile endpoint',
-    implementation: 'pending'
-  });
-});
+// Monthly summary
+router.get('/my-summary', attendanceController.mySummary);
+
+// Today's status
+router.get('/today', attendanceController.todayStatus);
 
 module.exports = router;

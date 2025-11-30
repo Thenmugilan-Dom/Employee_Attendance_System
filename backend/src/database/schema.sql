@@ -49,23 +49,6 @@ CREATE TABLE IF NOT EXISTS attendance (
     INDEX idx_user_date (userId, date)
 );
 
--- Insert sample data (optional)
--- Sample users
-INSERT INTO users (name, email, password, role, employeeId, department) VALUES
-('John Doe', 'john.doe@company.com', '$2b$10$example_hashed_password_here', 'employee', 'EMP001', 'Engineering'),
-('Jane Smith', 'jane.smith@company.com', '$2b$10$example_hashed_password_here', 'manager', 'MGR001', 'Engineering'),
-('Mike Johnson', 'mike.johnson@company.com', '$2b$10$example_hashed_password_here', 'employee', 'EMP002', 'Marketing'),
-('Sarah Wilson', 'sarah.wilson@company.com', '$2b$10$example_hashed_password_here', 'employee', 'EMP003', 'HR'),
-('Robert Brown', 'robert.brown@company.com', '$2b$10$example_hashed_password_here', 'manager', 'MGR002', 'HR');
-
--- Sample attendance records
-INSERT INTO attendance (userId, date, checkInTime, checkOutTime, status, totalHours) VALUES
-(1, '2025-11-29', '09:00:00', '17:30:00', 'present', 8.50),
-(3, '2025-11-29', '09:15:00', '17:30:00', 'late', 8.25),
-(4, '2025-11-29', '09:00:00', '13:00:00', 'half-day', 4.00),
-(1, '2025-11-28', '09:00:00', '17:30:00', 'present', 8.50),
-(2, '2025-11-28', '08:30:00', '17:00:00', 'present', 8.50);
-
 -- Views for common queries
 -- View for employee attendance summary
 CREATE VIEW employee_attendance_summary AS
