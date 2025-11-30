@@ -50,7 +50,12 @@ class EmployeeRepository {
       if (!userId) return null;
 
       const today = new Date().toISOString().split('T')[0];
-      const now = new Date().toTimeString().split(' ')[0];
+      const now = new Date();
+      const timeString = now.toTimeString().split(' ')[0];
+      
+      // Determine if late (after 9:00 AM)
+      const isLate = now.getHours() >= 9;
+      const status = isLate ? 'late' : 'present';
 
       if (DATABASE_TYPE === 'supabase') {
         // Check if already checked in today
@@ -62,14 +67,14 @@ class EmployeeRepository {
           .single();
 
         if (existing && existing.check_in_time) {
-          return { error: 'Already checked in today' };
+          return null; // Already checked in
         }
 
         if (existing) {
           // Update existing record
           const { data, error } = await supabase
             .from('attendance')
-            .update({ check_in_time: now, status: 'present' })
+            .update({ check_in_time: timeString, status: status })
             .eq('id', existing.id)
             .select()
             .single();
@@ -84,8 +89,8 @@ class EmployeeRepository {
           .insert({
             user_id: userId,
             date: today,
-            check_in_time: now,
-            status: 'present'
+            check_in_time: timeString,
+            status: status
           })
           .select()
           .single();
@@ -100,15 +105,15 @@ class EmployeeRepository {
         );
         
         if (existing.length > 0) {
-          return { error: 'Already checked in today' };
+          return null; // Already checked in
         }
 
         const query = `
           INSERT INTO attendance (userId, checkInTime, date, status)
-          VALUES (?, ?, ?, 'present')
+          VALUES (?, ?, ?, ?)
         `;
         
-        const [result] = await db.execute(query, [userId, now, today]);
+        const [result] = await db.execute(query, [userId, timeString, today, status]);
         
         if (result.insertId) {
           return await this.getAttendanceById(result.insertId);
@@ -142,11 +147,11 @@ class EmployeeRepository {
         if (findError && findError.code !== 'PGRST116') throw findError;
         
         if (!existing || !existing.check_in_time) {
-          return { error: 'Not checked in today' };
+          return null; // Not checked in today
         }
         
         if (existing.check_out_time) {
-          return { error: 'Already checked out today' };
+          return null; // Already checked out
         }
 
         // Calculate total hours
@@ -184,7 +189,7 @@ class EmployeeRepository {
           );
           return record[0] || null;
         }
-        return { error: 'Not checked in or already checked out' };
+        return null; // Not checked in or already checked out
       }
     } catch (error) {
       console.error('Error during check-out:', error);
