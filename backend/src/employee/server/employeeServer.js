@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const Database = require('../../repositories/database');
 const employeeRouter = require('../routers/employeeRouter');
 const attendanceRouter = require('../routers/attendanceRouter');
+
+const DATABASE_TYPE = process.env.DATABASE_TYPE || 'supabase';
 
 class EmployeeServer {
   constructor() {
@@ -42,13 +43,23 @@ class EmployeeServer {
     // Health check
     this.app.get('/health', async (req, res) => {
       try {
-        const dbHealth = await Database.healthCheck();
-        res.status(200).json({
-          service: 'Employee Service',
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          database: dbHealth
-        });
+        if (DATABASE_TYPE === 'supabase') {
+          res.status(200).json({
+            service: 'Employee Service',
+            status: 'healthy',
+            database: 'supabase',
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          const Database = require('../../repositories/database');
+          const dbHealth = await Database.healthCheck();
+          res.status(200).json({
+            service: 'Employee Service',
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            database: dbHealth
+          });
+        }
       } catch (error) {
         res.status(500).json({
           service: 'Employee Service',
@@ -111,15 +122,19 @@ class EmployeeServer {
   // Start the server
   async start() {
     try {
-      // Initialize database
-      await Database.initialize();
-      await Database.createTables();
+      // Initialize database only for MySQL
+      if (DATABASE_TYPE !== 'supabase') {
+        const Database = require('../../repositories/database');
+        await Database.initialize();
+        await Database.createTables();
+      }
 
       // Start server
       this.server = this.app.listen(this.port, () => {
         console.log(`🚀 Employee Server running on port ${this.port}`);
         console.log(`📍 Employee API: http://localhost:${this.port}/api/employee`);
         console.log(`💊 Health Check: http://localhost:${this.port}/health`);
+        console.log(`📦 Database: ${DATABASE_TYPE}`);
       });
 
       // Graceful shutdown
@@ -142,10 +157,13 @@ class EmployeeServer {
       });
     }
 
-    try {
-      await Database.close();
-    } catch (error) {
-      console.error('❌ Error during shutdown:', error.message);
+    if (DATABASE_TYPE !== 'supabase') {
+      try {
+        const Database = require('../../repositories/database');
+        await Database.close();
+      } catch (error) {
+        console.error('❌ Error during shutdown:', error.message);
+      }
     }
 
     process.exit(0);

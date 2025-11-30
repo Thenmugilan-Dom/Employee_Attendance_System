@@ -8,13 +8,14 @@ class ManagerController {
       
       const records = await managerRepository.getAllEmployeeAttendance(parseInt(limit), parseInt(offset));
       
+      // Records from Supabase are already in the right format
       res.status(200).json(records.map(record => ({
         id: record.id,
         employeeId: record.employeeId,
         name: record.name,
         email: record.email,
         department: record.department,
-        attendance: {
+        attendance: record.attendance || {
           id: record.attendanceId,
           date: record.date,
           checkInTime: record.checkInTime,
@@ -39,30 +40,35 @@ class ManagerController {
         return res.status(400).json({ error: 'Employee ID is required' });
       }
 
-      const records = await managerRepository.getEmployeeAttendance(id, parseInt(limit), parseInt(offset));
+      const result = await managerRepository.getEmployeeAttendance(id, parseInt(limit), parseInt(offset));
       
-      if (records.length === 0) {
+      if (!result || (Array.isArray(result) && result.length === 0)) {
         return res.status(404).json({ error: 'Employee not found' });
       }
 
-      // Group by employee info and map attendance records
-      const employee = {
-        id: records[0].id,
-        employeeId: records[0].employeeId,
-        name: records[0].name,
-        email: records[0].email,
-        department: records[0].department,
-        attendance: records.map(record => ({
-          id: record.attendanceId,
-          date: record.date,
-          checkInTime: record.checkInTime,
-          checkOutTime: record.checkOutTime,
-          status: record.status,
-          totalHours: record.totalHours
-        }))
-      };
-
-      res.status(200).json(employee);
+      // Handle both formats (Supabase returns object, MySQL returns array)
+      if (result.attendance) {
+        // Supabase format
+        res.status(200).json(result);
+      } else {
+        // MySQL format - Group by employee info and map attendance records
+        const employee = {
+          id: result[0].id,
+          employeeId: result[0].employeeId,
+          name: result[0].name,
+          email: result[0].email,
+          department: result[0].department,
+          attendance: result.map(record => ({
+            id: record.attendanceId,
+            date: record.date,
+            checkInTime: record.checkInTime,
+            checkOutTime: record.checkOutTime,
+            status: record.status,
+            totalHours: record.totalHours
+          }))
+        };
+        res.status(200).json(employee);
+      }
     } catch (error) {
       console.error('Error fetching employee attendance:', error.message);
       res.status(500).json({ error: 'Internal server error' });
@@ -80,10 +86,13 @@ class ManagerController {
 
       const summary = await managerRepository.getTeamSummary(monthParam, yearParam);
       
+      // Handle both formats
+      const employees = summary.employees || summary;
+      
       res.status(200).json({
         month: monthParam,
         year: yearParam,
-        employees: summary.map(emp => ({
+        employees: employees.map(emp => ({
           id: emp.id,
           employeeId: emp.employeeId,
           name: emp.name,
